@@ -76,13 +76,14 @@ router.put('/:id', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-    const user = await User.findOne({ email: req.body.email });
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
     const secret = process.env.SECRET_KEY;
     if (!user) {
         return res.status(400).send('The user not found');
     }
 
-    if (user && bcrypt.compareSync(req.body.password, user.passwordHash)) {
+    if (user && bcrypt.compareSync(password, user.passwordHash)) {
         const token = jwt.sign(
             {
                 userId: user.id,
@@ -92,7 +93,15 @@ router.post('/login', async (req, res) => {
             { expiresIn: '1d' }
         );
 
-        res.status(200).send({ user: user.email, token: token });
+        res.status(200);
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isAdmin: user.isAdmin,
+            phone: user.phone,
+            token,
+        });
     } else {
         res.status(400).send('password is wrong!');
     }
