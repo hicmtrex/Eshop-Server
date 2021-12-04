@@ -1,30 +1,34 @@
-const expressJwt = require('express-jwt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 
-// function authJwt() {
-//     const secret = process.env.secret;
-//     const api = process.env.API_URL;
-//     return expressJwt({
-//         secret,
-//         algorithms: ['HS256'],
-//         isRevoked: isRevoked
-//     }).unless({
-//         path: [
-//             {url: /\/public\/uploads(.*)/ , methods: ['GET', 'OPTIONS'] },
-//             {url: /\/api\/v1\/products(.*)/ , methods: ['GET', 'OPTIONS'] },
-//             {url: /\/api\/v1\/categories(.*)/ , methods: ['GET', 'OPTIONS'] },
-//             {url: /\/api\/v1\/orders(.*)/,methods: ['GET', 'OPTIONS', 'POST']},
-//             `${api}/users/login`,
-//             `${api}/users/register`,
-//         ]
-//     })
-// }
+export const protect = async (req, res, next) => {
+    const { authorization } = req.headers;
+    let token;
 
-// async function isRevoked(req, payload, done) {
-//     if(!payload.isAdmin) {
-//         done(null, true)
-//     }
+    if (authorization && authorization.startsWith('Bearer')) {
+        try {
+            token = authorization.split(' ')[1];
+            const decodedUser = jwt.verify(token, process.env.SECRET_KEY);
 
-//     done();
-// }
+            req.user = await User.findById(decodedUser.id).select('-password');
+            next();
+        } catch (error) {
+            console.error(error);
+            res.status(401);
+            throw new Error('not authorized,token failed');
+        }
+    }
+    if (!token) {
+        res.status(401);
+        throw new Error('Not authorized, no token');
+    }
+};
 
-module.exports = authJwt;
+export const admin = asyncHandler(async (req, res, next) => {
+    if (req.user && req.user.isAdmin) {
+        next();
+    } else {
+        res.status(401);
+        throw new Error('Not authorized as an admin');
+    }
+});

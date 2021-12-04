@@ -25,17 +25,29 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
+    const {
+        name,
+        email,
+        password,
+        phone,
+        isAdmin,
+        street,
+        apartment,
+        zip,
+        city,
+        country,
+    } = req.body;
     let user = new User({
-        name: req.body.name,
-        email: req.body.email,
-        passwordHash: bcrypt.hashSync(req.body.password, 10),
-        phone: req.body.phone,
-        isAdmin: req.body.isAdmin,
-        street: req.body.street,
-        apartment: req.body.apartment,
-        zip: req.body.zip,
-        city: req.body.city,
-        country: req.body.country,
+        name,
+        email,
+        passwordHash: bcrypt.hashSync(password, 10),
+        phone,
+        isAdmin,
+        street,
+        apartment,
+        zip,
+        city,
+        country,
     });
     user = await user.save();
 
